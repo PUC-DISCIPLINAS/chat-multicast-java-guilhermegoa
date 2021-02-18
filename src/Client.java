@@ -1,23 +1,23 @@
-package UDP;
-
 import java.io.IOException;
 import java.net.*;
 import java.util.Scanner;
 
 
-public class UDPClient {
+public class Client {
     private final static String HOST = "localhost";
     static boolean chatActive = false;
     static MulticastSocket mSocket = null;
 
-    public static void main(String args[]) {
+    public static <ex> void main(String args[]) {
 
         String res = null;
 
-        menu();
         int option = 0;
+        menu();
+
 
         do {
+
             System.out.println("Digite o numero da opcao:");
             Scanner input = new Scanner(System.in);
             option = input.nextInt();
@@ -27,7 +27,7 @@ public class UDPClient {
                     System.out.println("Digite um ip aima de 224 Ex.: 228.5.6.7");
                     String roomIP = input.next();
                     res = Send("criar-sala;" + roomIP + ";", HOST);
-                    System.out.println("Resposta; " + res);
+                    System.out.println("Resposta: " + res);
                     break;
                 case 2:
                     res = Send("listar-salas;", HOST);
@@ -38,7 +38,7 @@ public class UDPClient {
                     break;
                 case 3:
                     System.out.printf("Digite o a posicao da sala que deseja entrar:");
-                    int pos =  input.nextInt();
+                    int pos = input.nextInt();
                     Room(pos);
                     break;
                 default:
@@ -48,9 +48,7 @@ public class UDPClient {
 
         } while (option != 0);
 
-
     }
-
 
 
     private static void Room(int pos) {
@@ -68,7 +66,7 @@ public class UDPClient {
         try {
             chatActive = true;
 
-            InetAddress groupIp = InetAddress.getByName(roomIP);
+            InetAddress groupIp = InetAddress.getByName(roomIP.trim());
 
             mSocket = new MulticastSocket(mPort);
             mSocket.joinGroup(groupIp);
@@ -83,7 +81,7 @@ public class UDPClient {
             messageOut = new DatagramPacket(message, message.length, groupIp, mPort);
             mSocket.send(messageOut);
 
-            Send("adicionar-usuario;"+ userName + ";" + pos + ";", HOST);
+            Send("adicionar-usuario;" + userName + ";" + pos + ";", HOST);
 
             Thread mThread = new Thread(() -> {
                 while (chatActive) {
@@ -104,11 +102,11 @@ public class UDPClient {
                 String text = new String();
                 text = input.nextLine();
                 if (text.trim().equalsIgnoreCase("sair")) {
+                    Send("remover-usuario;" + userName + ";", HOST);
                     mSocket.leaveGroup(groupIp);
-                    mThread.interrupt();
                     chatActive = false;
-                }else if(text.trim().equalsIgnoreCase("listar")){
-                    res =  Send("listar-usuarios;" + pos + ";", HOST);
+                } else if (text.trim().equalsIgnoreCase("listar")) {
+                    res = Send("listar-usuarios;" + pos + ";", HOST);
                     resArray = resTractive(res);
                     for (int i = 0; i < resArray.length; i++) {
                         System.out.println(i + " - " + resArray[i]);
@@ -124,10 +122,11 @@ public class UDPClient {
             System.out.println("Socket: " + e.getMessage());
         } catch (IOException e) {
             System.out.println("IO: " + e.getMessage());
-        } finally {
-            if (mSocket != null)
-                mSocket.close();
         }
+//        finally {
+//            if (mSocket != null)
+//                mSocket.close();
+//        }
     }
 
     private static String Send(String text, String host) {
@@ -164,6 +163,7 @@ public class UDPClient {
     }
 
     private static void menu() {
+        System.out.println("0 - Sair");
         System.out.println("1 - Criar sala");
         System.out.println("2 - listar salas");
         System.out.println("3 - Entrar em uma sala");

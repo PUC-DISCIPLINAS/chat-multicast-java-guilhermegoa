@@ -1,5 +1,3 @@
-package UDP;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.DatagramPacket;
@@ -8,11 +6,9 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class UDPServer {
+public class Server {
     public static void main(String args[]) {
         DatagramSocket aSocket = null;
         DatagramPacket reply = null;
@@ -25,9 +21,9 @@ public class UDPServer {
             aSocket = new DatagramSocket(6789);
 
             System.out.println("Servidor: ouvindo porta UDP/6789.");
-            byte[] buffer = new byte[1000];
 
             while (true) {
+                byte[] buffer = new byte[1000];
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
 
@@ -57,13 +53,21 @@ public class UDPServer {
                         users.forEach(u -> res.add(u.name));
                         SendResponse(aSocket, res.toString().getBytes(StandardCharsets.UTF_8), res.toString().length(), request.getAddress(), request.getPort());
                         break;
+                    case "remover-usuario":
+                        int indexRemove = -1;
+                        for (int i = 0; i < users.size(); i++) {
+                            User userAux = users.get(i);
+                            if (userAux.name.equalsIgnoreCase(messageArray[1])){
+                                indexRemove = i;
+                            }
+                        }
+                        users.remove(indexRemove);
+                        m = "Removido com sucesso";
+                        SendResponse(aSocket, m.getBytes(), m.length(), request.getAddress(), request.getPort());
+                        break;
                     default:
                         SendResponse(aSocket, request.getData(), request.getLength(), request.getAddress(), request.getPort());
-
-
                 }
-
-
             }
         } catch (SocketException e) {
             System.out.println("Socket: " + e.getMessage());
